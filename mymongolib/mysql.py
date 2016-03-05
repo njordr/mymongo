@@ -3,6 +3,7 @@ import sys
 import logging
 
 from pymysqlreplication import BinLogStreamReader
+from importlib import util
 from pymysqlreplication.row_event import (
     DeleteRowsEvent,
     UpdateRowsEvent,
@@ -35,27 +36,53 @@ def mysql_stream(conf, mongo):
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGABRT, signal_handler)
 
+    try:
+        util.find_spec('setproctitle')
+        import setproctitle
+        setproctitle.setproctitle('mymongo_mysql_replicator')
+    except ImportError:
+        logger.info('Cannot set process name')
+
+    last_log = mongo.get_log_pos()
+    if last_log['log_file'] == 'NA':
+        log_file = None
+        log_pos = None
+        resume_stream = False
+    else:
+        log_file = last_log['log_file']
+        log_pos = last_log['log_pos']
+        resume_stream = True
+
     stream = BinLogStreamReader(connection_settings=mysql_settings,
                                 server_id=conf.getint('slaveid'),
                                 only_events=[DeleteRowsEvent, WriteRowsEvent, UpdateRowsEvent],
-                                blocking=True)
+                                blocking=True,
+                                resume_stream=resume_stream,
+                                log_file=log_file,
+                                log_pos=log_pos,
+                                only_schemas=conf['databases'].split(','))
 
     for binlogevent in stream:
         binlogevent.dump()
-        prefix = "%s:%s:" % (binlogevent.schema, binlogevent.table)
+        schema = "%s" % binlogevent.schema
+        table = "%s" % binlogevent.table
 
         for row in binlogevent.rows:
             if isinstance(binlogevent, DeleteRowsEvent):
                 vals = row["values"]
-                #r.delete(prefix + str(vals["id"]))
+                event_type = 'delete'
             elif isinstance(binlogevent, UpdateRowsEvent):
                 vals = row["after_values"]
-                #r.hmset(prefix + str(vals["id"]), vals)
+                event_type = 'update'
             elif isinstance(binlogevent, WriteRowsEvent):
                 vals = row["values"]
-                logger.debug(mongo.get_next_seqnum('insert_seq'))
-                #r.hmset(prefix + str(vals["id"]), vals)
-            logger.debug(vals)
+                event_type = 'insert'
+
+            mongo.write_to_queue(event_type, vals, schema, table)
+            mongo.write_log_pos(stream.log_file, stream.log_pos)
+            logger.debug(row)
+            logger.debug(stream.log_pos)
+            logger.debug(stream.log_file)
 
     stream.close()
 

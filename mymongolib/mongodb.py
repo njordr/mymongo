@@ -3,6 +3,8 @@ import urllib.parse
 import logging
 
 from .exceptions import SysException
+from pymongo.errors import CollectionInvalid
+from datetime import datetime
 
 logger = logging.getLogger('mymongo')
 
@@ -10,6 +12,7 @@ logger = logging.getLogger('mymongo')
 class MyMongoDB:
     mdb = None
     utildb = ''
+    checked_colls = []
 
     def __init__(self, conf):
         try:
@@ -28,7 +31,7 @@ class MyMongoDB:
                             conf['host'] + ':' + \
                             conf['port'] + '/'
         try:
-            self.mdb = pymongo.MongoClient(conn_string)
+            self.mdb = pymongo.MongoClient(conn_string, connect=False)
         except Exception as e:
             raise SysException(e)
         self.utildb = conf['utildb']
@@ -44,21 +47,28 @@ class MyMongoDB:
 
         return db
 
-    def get_coll(self, coll_name):
+    def get_coll(self, coll_name, db_name):
         new = False
         db = None
 
         try:
-            db = self.get_db(self.utildb)
+            db = self.get_db(db_name)
         except Exception as e:
             SysException(e)
 
-        try:
-            db.create_collection(coll_name)
-            new = True
-        except Exception as e:
-            logger.info('Error creating collection: ' + str(e))
+        if coll_name not in self.checked_colls:
+            try:
+                db.create_collection(coll_name)
+                new = True
+            except CollectionInvalid as e:
+                logger.info(str(e))
+            except Exception as e:
+                raise SysException(e)
+
+            self.checked_colls.append(coll_name)
+
         coll = db[coll_name]
+
         if new:
             if coll_name == 'counters':
                 try:
@@ -67,15 +77,63 @@ class MyMongoDB:
                     coll.insert_one({'_id': 'delete_seq', 'num': 0})
                 except Exception as e:
                     raise SysException(e)
+            elif coll_name == 'mysqllog':
+                try:
+                    coll.insert_one({'_id': 'last_log_pos', 'log_file': 'NA', 'log_pos': 'NA'})
+                except Exception as e:
+                    raise SysException(e)
 
         return coll
 
     def get_next_seqnum(self, seq_name):
-        coll = self.get_coll('counters')
-        logger.debug('seq_name: ' + seq_name)
-        seq = coll.find_one({'_id': seq_name})
-        logger.debug('doc: ')
-        logger.debug(seq)
-        coll.replace_one({'_id': seq_name}, {'num': seq['num'] + 1})
+        coll = self.get_coll('counters', self.utildb)
+        try:
+            seq = coll.find_one({'_id': seq_name})
+        except Exception as e:
+            raise SysException(e)
+        try:
+            coll.replace_one({'_id': seq_name}, {'num': seq['num'] + 1})
+        except Exception as e:
+            raise SysException(e)
 
         return seq['num']
+
+    def write_log_pos(self, log_file, log_pos):
+        coll = self.get_coll('mysqllog', self.utildb)
+        try:
+            coll.replace_one({'_id': 'last_log_pos'}, {'log_file': log_file, 'log_pos': log_pos})
+        except Exception as e:
+            raise SysException(e)
+
+    def get_log_pos(self):
+        coll = self.get_coll('mysqllog', self.utildb)
+        try:
+            last_log = coll.find_one({'_id': 'last_log_pos'})
+        except Exception as e:
+            raise SysException(e)
+
+        return last_log
+
+    def write_to_queue(self, event_type, values, schema, table):
+        seqnum = datetime.now().timestamp()
+        if event_type == 'insert':
+            coll = self.get_coll('insert_queue', self.utildb)
+            # seqnum = self.get_next_seqnum('insert_seq')
+        elif event_type == 'update':
+            coll = self.get_coll('update_queue', self.utildb)
+            # seqnum = self.get_next_seqnum('update_seq')
+        elif event_type == 'delete':
+            coll = self.get_coll('delete_queue', self.utildb)
+            # seqnum = self.get_next_seqnum('delete_seq')
+
+        doc = dict()
+        doc['schema'] = schema
+        doc['table'] = table
+        doc['event_type'] = event_type
+        doc['seqnum'] = seqnum
+        doc['values'] = values
+
+        try:
+            coll.insert_one(doc)
+        except Exception as e:
+            logger.error('Cannot insert into queue for event type: ' + event_type + '. Error: ' + str(e))

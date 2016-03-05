@@ -1,10 +1,13 @@
 import logging
 import logging.handlers
 import configparser
+import multiprocessing
+
 
 from mymongolib import utils
 from mymongolib import mysql
 from mymongolib.mongodb import MyMongoDB
+from importlib import util
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -23,5 +26,16 @@ logger.addHandler(ch)
 
 if __name__ == '__main__':
     logger.info('Start mymongo')
+    try:
+        util.find_spec('setproctitle')
+        import setproctitle
+        setproctitle.setproctitle('mymongo_daemon')
+    except ImportError:
+        logger.info('Cannot set process name')
     mongo = MyMongoDB(config['mongodb'])
-    mysql.mysql_stream(config['mysql'], mongo)
+    processes = list()
+    processes.append(multiprocessing.Process(target=mysql.mysql_stream, args=(config['mysql'], mongo)))
+    for process in processes:
+        process.start()
+        process.join()
+    # mysql.mysql_stream(config['mysql'], mongo)
