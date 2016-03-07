@@ -2,6 +2,7 @@ import logging
 import logging.handlers
 import configparser
 import multiprocessing
+import sys
 
 
 from mymongolib import utils
@@ -26,6 +27,33 @@ logger.addHandler(ch)
 
 if __name__ == '__main__':
     logger.info('Start mymongo')
+    parser = utils.cmd_parser()
+    args = parser.parse_args()
+    if args.mysqldump_schema:
+        try:
+            utils.run_mysqldump(dump_type='schema', conf=config['mysql'])
+            logger.info('Schema dump procedure ended')
+            sys.exit(0)
+        except Exception as e:
+            logger.error('Schema dump procedure ended with errors: ' + str(e))
+            sys.exit(1)
+    elif args.mysqldump_data:
+        try:
+            utils.run_mysqldump(dump_type='data', conf=config['mysql'])
+            logger.info('Data dump procedure ended')
+            sys.exit(0)
+        except Exception as e:
+            logger.error('Data dump procedure ended with errors: ' + str(e))
+            sys.exit(1)
+    elif args.mysqldump_complete:
+        try:
+            utils.run_mysqldump(dump_type='complete', conf=config['mysql'])
+            logger.info('Complete dump procedure ended')
+            sys.exit(0)
+        except Exception as e:
+            logger.error('Complete dump procedure ended with errors: ' + str(e))
+            sys.exit(1)
+
     try:
         util.find_spec('setproctitle')
         import setproctitle
