@@ -117,14 +117,14 @@ class MyMongoDB:
     def write_to_queue(self, event_type, values, schema, table):
         seqnum = datetime.now().timestamp()
         if event_type == 'insert':
-            coll = self.get_coll('insert_queue', self.utildb)
-            # seqnum = self.get_next_seqnum('insert_seq')
+            # coll = self.get_coll('insert_queue', self.utildb)
+            coll = self.get_coll('replicator_queue', self.utildb)
         elif event_type == 'update':
-            coll = self.get_coll('update_queue', self.utildb)
-            # seqnum = self.get_next_seqnum('update_seq')
+            # coll = self.get_coll('update_queue', self.utildb)
+            coll = self.get_coll('replicator_queue', self.utildb)
         elif event_type == 'delete':
-            coll = self.get_coll('delete_queue', self.utildb)
-            # seqnum = self.get_next_seqnum('delete_seq')
+            # coll = self.get_coll('delete_queue', self.utildb)
+            coll = self.get_coll('replicator_queue', self.utildb)
 
         doc = dict()
         doc['schema'] = schema
@@ -137,3 +137,18 @@ class MyMongoDB:
             coll.insert_one(doc)
         except Exception as e:
             logger.error('Cannot insert into queue for event type: ' + event_type + '. Error: ' + str(e))
+
+    def insert(self, doc, schema, collection):
+        coll = self.get_coll(collection, schema)
+
+        try:
+            coll.insert_one(doc)
+        except Exception as e:
+            logger.error('Cannot insert into collection: ' + collection + '. Error: ' + str(e))
+
+    def drop_db(self, db_name):
+        if db_name in self.mdb.database_names():
+            try:
+                self.mdb.drop_database(db_name)
+            except Exception as e:
+                raise SysException(e)

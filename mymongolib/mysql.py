@@ -50,7 +50,7 @@ def mysql_stream(conf, mongo):
         resume_stream = False
     else:
         log_file = last_log['log_file']
-        log_pos = last_log['log_pos']
+        log_pos = int(last_log['log_pos'])
         resume_stream = True
 
     stream = BinLogStreamReader(connection_settings=mysql_settings,
