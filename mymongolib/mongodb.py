@@ -136,7 +136,7 @@ class MyMongoDB:
         try:
             coll.insert_one(doc)
         except Exception as e:
-            logger.error('Cannot insert into queue for event type: ' + event_type + '. Error: ' + str(e))
+            raise SysException(e)
 
     def insert(self, doc, schema, collection):
         coll = self.get_coll(collection, schema)
@@ -144,7 +144,29 @@ class MyMongoDB:
         try:
             coll.insert_one(doc)
         except Exception as e:
-            logger.error('Cannot insert into collection: ' + collection + '. Error: ' + str(e))
+            raise SysException(e)
+
+    def update(self, doc, schema, collection, primary_key):
+        coll = self.get_coll(collection, schema)
+
+        try:
+            coll.replace_one(primary_key, doc)
+        except Exception as e:
+            raise SysException(e)
+
+    def delete(self, doc, schema, collection, primary_key=None):
+        coll = self.get_coll(collection, schema)
+
+        if primary_key is None:
+            try:
+                coll.delete_one(doc)
+            except Exception as e:
+                raise SysException(e)
+        else:
+            try:
+                coll.delete_one(primary_key)
+            except Exception as e:
+                raise SysException(e)
 
     def drop_db(self, db_name):
         if db_name in self.mdb.database_names():
@@ -152,3 +174,63 @@ class MyMongoDB:
                 self.mdb.drop_database(db_name)
             except Exception as e:
                 raise SysException(e)
+
+    def get_from_queue(self, batch_size):
+        coll = self.get_coll('replicator_queue', self.utildb)
+        try:
+            queue = coll.find().sort('seqnum', 1)[0:batch_size]
+        except Exception as e:
+            raise SysException(e)
+
+        return queue
+
+    def insert_primary_key(self, doc):
+        coll = self.get_coll('primary_keys', self.utildb)
+        try:
+            coll.replace_one({'_id': doc['_id']}, doc, True)
+        except Exception as e:
+            raise SysException(e)
+
+    def get_primary_key(self, table, db):
+        coll = self.get_coll('primary_keys', self.utildb)
+        primary = None
+        try:
+            primary = coll.find_one({'_id': db + '.' + table})
+        except Exception as e:
+            raise SysException(e)
+
+        return primary
+
+    def make_db_as_parsed(self, db, parse_type):
+        coll = self.get_coll('parsed_db', self.utildb)
+        try:
+            doc = coll.find_one({'_id': db})
+        except Exception as e:
+            raise SysException(e)
+
+        if doc is None:
+            doc = dict()
+            doc['_id'] = db
+            doc['db'] = db
+            doc['schema'] = 'ko'
+            doc['data'] = 'ko'
+
+        if parse_type == 'schema':
+            doc['schema'] = 'ok'
+        elif parse_type == 'data':
+            doc['data'] = 'ok'
+
+        try:
+            coll.replace_one({'_id': db}, doc, True)
+        except Exception as e:
+            raise SysException(e)
+
+    def get_db_as_parsed(self, db):
+        coll = self.get_coll('parsed_db', self.utildb)
+
+        try:
+            doc = coll.find_one({'_id': db})
+        except Exception as e:
+            raise SysException(e)
+
+        return doc
