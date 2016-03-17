@@ -6,7 +6,7 @@ from .exceptions import SysException
 from pymongo.errors import CollectionInvalid
 from datetime import datetime
 
-logger = logging.getLogger('mymongo')
+# logger = logging.getLogger(__name__)
 
 
 class MyMongoDB:
@@ -15,6 +15,7 @@ class MyMongoDB:
     checked_colls = []
 
     def __init__(self, conf):
+        self.logger = logging.getLogger(__name__)
         try:
             password = urllib.parse.quote(conf['password'])
         except Exception as e:
@@ -61,7 +62,7 @@ class MyMongoDB:
                 db.create_collection(coll_name)
                 new = True
             except CollectionInvalid as e:
-                logger.info(str(e))
+                self.logger.info(str(e))
             except Exception as e:
                 raise SysException(e)
 
@@ -138,6 +139,8 @@ class MyMongoDB:
         except Exception as e:
             raise SysException(e)
 
+        return seqnum
+
     def insert(self, doc, schema, collection):
         coll = self.get_coll(collection, schema)
 
@@ -154,7 +157,7 @@ class MyMongoDB:
         except Exception as e:
             raise SysException(e)
 
-    def delete(self, doc, schema, collection, primary_key=None):
+    def delete(self, schema, collection, doc=None, primary_key=None):
         coll = self.get_coll(collection, schema)
 
         if primary_key is None:
@@ -164,9 +167,19 @@ class MyMongoDB:
                 raise SysException(e)
         else:
             try:
-                coll.delete_one(primary_key)
+                self.logger.debug('try to delete doc with key: ' + str(primary_key))
+                result = coll.delete_one(primary_key)
+                self.logger.debug('delete result: ' + str(result.deleted_count))
             except Exception as e:
                 raise SysException(e)
+
+    def delete_from_queue(self, queue_id):
+        coll = self.get_coll('replicator_queue', self.utildb)
+
+        try:
+            result = coll.delete_one(queue_id)
+        except Exception as e:
+            raise SysException(e)
 
     def drop_db(self, db_name):
         if db_name in self.mdb.database_names():
@@ -195,6 +208,7 @@ class MyMongoDB:
         coll = self.get_coll('primary_keys', self.utildb)
         primary = None
         try:
+            self.logger.debug('Try to retrieve primary key: ' + db + '.' + table)
             primary = coll.find_one({'_id': db + '.' + table})
         except Exception as e:
             raise SysException(e)

@@ -108,7 +108,7 @@ class Daemon(object):
             with open(self.pidfile) as f:
                 pids = f.readlines()
         except IOError:
-            message = "There is not PID file. Daemon already running?\n"
+            message = "There is not PID file. Daemon is not running\n"
             sys.stderr.write(message)
             sys.exit(1)
 

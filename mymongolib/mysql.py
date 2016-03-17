@@ -12,7 +12,7 @@ from pymysqlreplication.row_event import (
 logger = logging.getLogger('mymongo')
 
 
-def mysql_stream(conf, mongo):
+def mysql_stream(conf, mongo, queue_out):
     # server_id is your slave identifier, it should be unique.
     # set blocking to True if you want to block and wait for the next event at
     # the end of the stream
@@ -58,8 +58,9 @@ def mysql_stream(conf, mongo):
                 vals = row["values"]
                 event_type = 'insert'
 
-            mongo.write_to_queue(event_type, vals, schema, table)
+            seqnum = mongo.write_to_queue(event_type, vals, schema, table)
             mongo.write_log_pos(stream.log_file, stream.log_pos)
+            queue_out.put({'seqnum': seqnum})
             logger.debug(row)
             logger.debug(stream.log_pos)
             logger.debug(stream.log_file)

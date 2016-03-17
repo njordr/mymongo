@@ -56,6 +56,14 @@ if __name__ == '__main__':
         except Exception as e:
             logger.error('Schema dump procedure ended with errors: ' + str(e))
             sys.exit(1)
+    elif args.mysqldump_complete:
+        try:
+            utils.run_mysqldump(dump_type='complete', conf=config['mysql'], mongodb=mongo)
+            logger.info('Complete dump procedure ended')
+            sys.exit(0)
+        except Exception as e:
+            logger.error('Complete dump procedure ended with errors: ' + str(e))
+            sys.exit(1)
 
     log_err = LoggerWriter(logger, logging.ERROR)
     mymongo_daemon = MyMongoDaemon(config['general']['pid_file'], log_err=log_err)
@@ -63,14 +71,14 @@ if __name__ == '__main__':
         for db in config['mysql']['databases'].split(','):
             parsed = mongo.get_db_as_parsed(db)
             if parsed is None:
-                logger.error('Database schema ' + db + ' has not been parsed. Run schema dump procedure')
+                logger.error('Database schema ' + db + ' has not been parsed. Please run schema dump procedure before')
                 sys.exit(1)
             elif parsed['schema'] == 'ko':
-                logger.error('Database schema ' + db + ' has not been parsed. Run schema dump procedure')
+                logger.error('Database schema ' + db + ' has not been parsed. Please run schema dump procedure before')
                 sys.exit(1)
             elif parsed['data'] == 'ko':
                 logger.warning('Database data ' + db + ' has not been parsed. '
-                                                       'It could be better to run data dump procedure')
+                                                       'It could be better to run data dump procedure before')
 
         mymongo_daemon.start()
     elif args.stop:

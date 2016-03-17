@@ -6,6 +6,7 @@ import configparser
 
 from importlib import util
 from multiprocessing import Process
+from multiprocessing import Queue
 from apscheduler.schedulers.blocking import BlockingScheduler
 from mymongolib.daemon import Daemon
 from mymongolib import mysql
@@ -30,6 +31,8 @@ class MyMongoDaemon(Daemon):
     
         self.logger.info("Running")
 
+        self.queues = dict()
+        self.queues['replicator_out'] = Queue()
         procs = dict()
         procs['scheduler'] = Process(name='scheduler', target=self.scheduler)
         procs['scheduler'].daemon = True
@@ -70,7 +73,7 @@ class MyMongoDaemon(Daemon):
             setproctitle.setproctitle('mymongo_replicator')
 
         mongo = MyMongoDB(config['mongodb'])
-        mysql.mysql_stream(config['mysql'], mongo)
+        mysql.mysql_stream(config['mysql'], mongo, self.queues['replicator_out'])
 
     def start_module(self):
         self.logger.debug('Start ' + self.start_module.__name__)
@@ -110,5 +113,5 @@ class MyMongoDaemon(Daemon):
         module_instance = self.start_module()
 
         mongo = MyMongoDB(config['mongodb'])
-        munging = DataMunging(mongo)
+        munging = DataMunging(mongo, self.queues['replicator_out'])
         munging.run(module_instance)
