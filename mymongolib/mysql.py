@@ -9,10 +9,10 @@ from pymysqlreplication.row_event import (
     WriteRowsEvent,
 )
 
-logger = logging.getLogger('mymongo')
-
 
 def mysql_stream(conf, mongo, queue_out):
+    logger = logging.getLogger(__name__)
+
     # server_id is your slave identifier, it should be unique.
     # set blocking to True if you want to block and wait for the next event at
     # the end of the stream
@@ -52,7 +52,9 @@ def mysql_stream(conf, mongo, queue_out):
                 vals = row["values"]
                 event_type = 'delete'
             elif isinstance(binlogevent, UpdateRowsEvent):
-                vals = row["after_values"]
+                vals = dict()
+                vals["before"] = row["before_values"]
+                vals["after"] = row["after_values"]
                 event_type = 'update'
             elif isinstance(binlogevent, WriteRowsEvent):
                 vals = row["values"]

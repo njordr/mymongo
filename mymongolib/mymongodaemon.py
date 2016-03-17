@@ -8,10 +8,13 @@ from importlib import util
 from multiprocessing import Process
 from multiprocessing import Queue
 from apscheduler.schedulers.blocking import BlockingScheduler
+
 from mymongolib.daemon import Daemon
 from mymongolib import mysql
 from mymongolib.mongodb import MyMongoDB
 from mymongolib.datamunging import DataMunging
+from mymongomodules.parse_data import ParseData
+from mymongomodules.process_data import ProcessData
 
 config = configparser.ConfigParser()
 config.read('conf/config.ini')
@@ -43,6 +46,9 @@ class MyMongoDaemon(Daemon):
         procs['datamunging'] = Process(name='datamunging', target=self.data_munging)
         procs['datamunging'].daemon = True
         procs['datamunging'].start()
+        procs['dataprocess'] = Process(name='dataprocess', target=self.data_process)
+        procs['dataprocess'].daemon = True
+        procs['dataprocess'].start()
 
         while True:
             self.logger.info('Working...')
@@ -75,6 +81,7 @@ class MyMongoDaemon(Daemon):
         mongo = MyMongoDB(config['mongodb'])
         mysql.mysql_stream(config['mysql'], mongo, self.queues['replicator_out'])
 
+    '''
     def start_module(self):
         self.logger.debug('Start ' + self.start_module.__name__)
 
@@ -103,15 +110,25 @@ class MyMongoDaemon(Daemon):
             self.logger.error('Cannot instantiate class: ' + module_name + ' Error: ' + str(e))
 
         return instance
-
+    '''
     def data_munging(self):
         self.write_pid(str(os.getpid()))
         if self.setproctitle:
             import setproctitle
             setproctitle.setproctitle('mymongo_datamunging')
 
-        module_instance = self.start_module()
+        module_instance = ParseData()
 
         mongo = MyMongoDB(config['mongodb'])
         munging = DataMunging(mongo, self.queues['replicator_out'])
         munging.run(module_instance)
+
+    def data_process(self):
+        self.write_pid(str(os.getpid()))
+        if self.setproctitle:
+            import setproctitle
+            setproctitle.setproctitle('mymongo_dataprocess')
+
+        mongo = MyMongoDB(config['mongodb'])
+        process_instance = ProcessData(mongo)
+        process_instance.run()

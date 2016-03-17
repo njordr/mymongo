@@ -21,8 +21,6 @@ class DataMunging:
         queue_thread.start()
 
         while True:
-            time.sleep(.1)
-
             try:
                 queue = self.mongo.get_from_queue(100)
             except Exception as e:
@@ -30,9 +28,11 @@ class DataMunging:
 
             if queue.count() < 1:
                 self.logger.debug('No entries in replicator queue')
-                if not self.run_parser:
-                    self.logger.debug('No messages from replicator queue')
-                    continue
+                time.sleep(1)
+                continue
+                # if not self.run_parser:
+                #    self.logger.debug('No messages from replicator queue')
+                #    continue
 
             to_delete = list()
             for record in queue:
@@ -64,13 +64,13 @@ class DataMunging:
                                           ' db ' + doc['schema'] + ' Error: ' + str(e))
                 elif doc['event_type'] == 'update':
                     if key is None:
-                        self.logger.error('Cannot update document ' + str(doc['_id']) + ' without a primary key')
-                        continue
-                    primary_key = dict()
-                    for k in key['primary_key']:
-                        primary_key[k] = str(doc['values'][k])
+                        primary_key = doc['values']['before']
+                    else:
+                        primary_key = dict()
+                        for k in key['primary_key']:
+                            primary_key[k] = str(doc['values']['after'][k])
                     try:
-                        self.mongo.update(doc['values'], doc['schema'], doc['table'], primary_key)
+                        self.mongo.update(doc['values']['after'], doc['schema'], doc['table'], primary_key)
                         to_delete.append(doc['_id'])
                         self.last_seqnum = doc['seqnum']
                     except Exception as e:
@@ -98,8 +98,7 @@ class DataMunging:
             self.logger.debug('Delete records: ' + str(to_delete))
             for queue_id in to_delete:
                 try:
-                    # self.mongo.delete_from_queue({'_id': queue_id})
-                    continue
+                    self.mongo.delete_from_queue({'_id': queue_id})
                 except Exception as e:
                     self.logger.error('Cannot delete document from queue Error: ' + str(e))
 
