@@ -1,0 +1,333 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mymongolib.utils &mdash; MyMongo 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="MyMongo 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mymongolib.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">tempfile</span> <span class="kn">import</span> <span class="n">NamedTemporaryFile</span>
+<span class="kn">from</span> <span class="nn">lxml</span> <span class="kn">import</span> <span class="n">etree</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">SysException</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="cmd_parser"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.utils.cmd_parser">[docs]</a><span class="k">def</span> <span class="nf">cmd_parser</span><span class="p">():</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Replicate a MySQL database to MongoDB&#39;</span><span class="p">)</span>
+    <span class="c1"># parser.add_argument(&#39;--resume-from-end&#39;, dest=&#39;resume_from_end&#39;,</span>
+    <span class="c1">#                    action=&#39;store_true&#39;, help=&quot;Even if the binlog\</span>
+    <span class="c1">#                    replication was interrupted, start from the end of\</span>
+    <span class="c1">#                    the current binlog rather than resuming from the interruption&quot;,</span>
+    <span class="c1">#                    default=False)</span>
+    <span class="c1"># parser.add_argument(&#39;--resume-from-start&#39;, dest=&#39;resume_from_start&#39;,</span>
+    <span class="c1">#                    action=&#39;store_true&#39;, help=&quot;Start from the beginning\</span>
+    <span class="c1">#                    of the current binlog, regardless of the current position&quot;, default=False)</span>
+    <span class="c1"># parser.add_argument(&#39;--mysqldump-file&#39;, dest=&#39;mysqldump_file&#39;, type=str,</span>
+    <span class="c1">#                    help=&#39;Specify a file to get the mysqldump from, rather\</span>
+    <span class="c1">#                    than having ditto running mysqldump itself&#39;,</span>
+    <span class="c1">#                    default=&#39;&#39;)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--mysqldump-schema&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;mysqldump_schema&#39;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Run mysqldump to create new databases on mongodb, but </span><span class="se">\</span>
+<span class="s2">                        not import any data so you can review mmongodb schema before importing data&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--mysqldump-data&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;mysqldump_data&#39;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Run mysqldump to import only data&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--mysqldump-complete&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;mysqldump_complete&#39;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Run mysqldump to import schema and data&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--start&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;start&#39;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Start the daemon process&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--stop&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;stop&#39;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Stop the daemon process&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--restart&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;restart&#39;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Restart the daemon process&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--status&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;status&#39;</span><span class="p">,</span>
+                        <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Status of the daemon process&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span></div>
+
+
+<div class="viewcode-block" id="run_mysqldump"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.utils.run_mysqldump">[docs]</a><span class="k">def</span> <span class="nf">run_mysqldump</span><span class="p">(</span><span class="n">dump_type</span><span class="p">,</span> <span class="n">conf</span><span class="p">,</span> <span class="n">mongodb</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">db</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;databases&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dump_file</span> <span class="o">=</span> <span class="n">mysqldump_cmd</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">dump_type</span><span class="o">=</span><span class="n">dump_type</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dump_type</span> <span class="o">==</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mysqldump_parser_data</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="n">mongodb</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dump_type</span> <span class="o">==</span> <span class="s1">&#39;schema&#39;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mysqldump_parser_schema</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="n">mongodb</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dump_type</span> <span class="o">==</span> <span class="s1">&#39;complete&#39;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mysqldump_parser_schema</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="n">mongodb</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mysqldump_parser_data</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="n">mongodb</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">True</span></div>
+
+
+<div class="viewcode-block" id="process_data_buffer"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.utils.process_data_buffer">[docs]</a><span class="k">def</span> <span class="nf">process_data_buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">mongodb</span><span class="p">):</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XMLParser</span><span class="p">(</span><span class="n">recover</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">tnode</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="n">parser</span><span class="p">)</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">tnode</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;field&#39;</span><span class="p">:</span>
+            <span class="n">doc</span><span class="p">[</span><span class="n">child</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="n">text</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">mongodb</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">del</span> <span class="n">tnode</span></div>
+
+
+<div class="viewcode-block" id="process_schema_buffer"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.utils.process_schema_buffer">[docs]</a><span class="k">def</span> <span class="nf">process_schema_buffer</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">mongodb</span><span class="p">):</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XMLParser</span><span class="p">(</span><span class="n">recover</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">tnode</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="n">parser</span><span class="p">)</span>
+    <span class="n">doc</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">table</span>
+    <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;primary_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;table&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span>
+    <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;db&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span>
+    <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">tnode</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;field&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;Key&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;PRI&#39;</span><span class="p">:</span>
+                <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;primary_key&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;Field&#39;</span><span class="p">])</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">mongodb</span><span class="o">.</span><span class="n">insert_primary_key</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">del</span> <span class="n">tnode</span></div>
+
+
+<div class="viewcode-block" id="mysqldump_parser_data"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.utils.mysqldump_parser_data">[docs]</a><span class="k">def</span> <span class="nf">mysqldump_parser_data</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="n">mongodb</span><span class="p">):</span>
+    <span class="n">inputbuffer</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">db_start</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;.*&lt;database name.*&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="n">tb_start</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;.*&lt;table_data.*&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="n">row_start</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;.*&lt;row&gt;.*&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="n">row_end</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;.*&lt;/row&gt;.*&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="n">master_log</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;.*CHANGE MASTER.*&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">log_file</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">log_pos</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">inputfile</span><span class="p">:</span>
+        <span class="n">append</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">inputfile</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">row_start</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                <span class="c1"># print(&#39;start&#39;)</span>
+                <span class="n">inputbuffer</span> <span class="o">=</span> <span class="n">line</span>
+                <span class="n">append</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="n">row_end</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                <span class="c1"># print(&#39;end&#39;)</span>
+                <span class="n">inputbuffer</span> <span class="o">+=</span> <span class="n">line</span>
+                <span class="n">append</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="n">process_data_buffer</span><span class="p">(</span><span class="n">inputbuffer</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">mongodb</span><span class="p">)</span>
+                <span class="n">inputbuffer</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="k">del</span> <span class="n">inputbuffer</span>
+            <span class="k">elif</span> <span class="n">append</span><span class="p">:</span>
+                <span class="c1"># print(&#39;elif&#39;)</span>
+                <span class="n">inputbuffer</span> <span class="o">+=</span> <span class="n">line</span>
+            <span class="k">elif</span> <span class="n">db_start</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                <span class="n">db</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;name=&quot;(.*?)&quot;&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">mongodb</span><span class="o">.</span><span class="n">drop_db</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">tb_start</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                <span class="n">table</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;name=&quot;(.*?)&quot;&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">master_log</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                <span class="n">log_file</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;MASTER_LOG_FILE=&#39;(.*?)&#39;&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">log_pos</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;MASTER_LOG_POS=(.*?);&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">log_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">log_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">mongodb</span><span class="o">.</span><span class="n">write_log_pos</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="n">log_pos</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">mongodb</span><span class="o">.</span><span class="n">make_db_as_parsed</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="s1">&#39;data&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Cannot insert db &#39;</span> <span class="o">+</span> <span class="n">db</span> <span class="o">+</span> <span class="s1">&#39; as parsed&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="mysqldump_parser_schema"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.utils.mysqldump_parser_schema">[docs]</a><span class="k">def</span> <span class="nf">mysqldump_parser_schema</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="n">mongodb</span><span class="p">):</span>
+    <span class="n">inputbuffer</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">db_start</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;.*&lt;database name.*&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="n">tb_start</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;.*&lt;table_structure.*&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="n">tb_end</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;.*&lt;/table_structure.*&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dump_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">inputfile</span><span class="p">:</span>
+        <span class="n">append</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">inputfile</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tb_start</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                <span class="c1"># print(&#39;start&#39;)</span>
+                <span class="n">inputbuffer</span> <span class="o">=</span> <span class="n">line</span>
+                <span class="n">append</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="n">table</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;name=&quot;(.*?)&quot;&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">tb_end</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                <span class="c1"># print(&#39;end&#39;)</span>
+                <span class="n">inputbuffer</span> <span class="o">+=</span> <span class="n">line</span>
+                <span class="n">append</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="n">process_schema_buffer</span><span class="p">(</span><span class="n">inputbuffer</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">mongodb</span><span class="p">)</span>
+                <span class="n">inputbuffer</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="k">del</span> <span class="n">inputbuffer</span>
+            <span class="k">elif</span> <span class="n">append</span><span class="p">:</span>
+                <span class="c1"># print(&#39;elif&#39;)</span>
+                <span class="n">inputbuffer</span> <span class="o">+=</span> <span class="n">line</span>
+            <span class="k">elif</span> <span class="n">db_start</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                <span class="n">db</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;name=&quot;(.*?)&quot;&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">mongodb</span><span class="o">.</span><span class="n">make_db_as_parsed</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="s1">&#39;schema&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Cannot insert db &#39;</span> <span class="o">+</span> <span class="n">db</span> <span class="o">+</span> <span class="s1">&#39; as parsed&#39;</span><span class="p">)</span></div>
+    <span class="c1"># TODO add index from mysql schema</span>
+
+
+<div class="viewcode-block" id="mysqldump_cmd"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.utils.mysqldump_cmd">[docs]</a><span class="k">def</span> <span class="nf">mysqldump_cmd</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">dump_type</span><span class="p">):</span>
+    <span class="n">dump_file</span> <span class="o">=</span> <span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">dumpcommand</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;mysqldump&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;--user=&#39;</span> <span class="o">+</span> <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;--host=&#39;</span> <span class="o">+</span> <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;--port=&#39;</span> <span class="o">+</span> <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;--force&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;--xml&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;--master-data=2&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="n">dumpcommand</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;--password=&#39;</span> <span class="o">+</span> <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">dump_type</span> <span class="o">==</span> <span class="s1">&#39;schema&#39;</span><span class="p">:</span>
+        <span class="n">dumpcommand</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;--no-data&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">dump_type</span> <span class="o">==</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
+        <span class="n">dumpcommand</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;--no-create-db&#39;</span><span class="p">)</span>
+        <span class="n">dumpcommand</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;--no-create-info&#39;</span><span class="p">)</span>
+    <span class="n">dumpcommand</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;executing: {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dumpcommand</span><span class="p">)))</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">dump_file</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">p1</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">dumpcommand</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">p1</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">dump_file</span><span class="o">.</span><span class="n">name</span></div>
+
+    <span class="c1"># TODO save log_pos to mongo to start from here with replicator</span>
+
+
+<div class="viewcode-block" id="LoggerWriter"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.utils.LoggerWriter">[docs]</a><span class="k">class</span> <span class="nc">LoggerWriter</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">level</span>
+
+<div class="viewcode-block" id="LoggerWriter.write"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.utils.LoggerWriter.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">message</span> <span class="o">!=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="LoggerWriter.flush"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.utils.LoggerWriter.flush">[docs]</a>    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">True</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Giovanni Colapinto.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

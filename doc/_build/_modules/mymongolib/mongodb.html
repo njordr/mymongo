@@ -1,0 +1,539 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mymongolib.mongodb &mdash; MyMongo 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="MyMongo 1.0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mymongolib.mongodb</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Module to interact with mongodb</span>
+
+<span class="sd">.. module:: mymongolib</span>
+<span class="sd">   :platform: Unix</span>
+<span class="sd">   :synopsis: Usefull classes for mymongo.</span>
+
+<span class="sd">.. moduleauthor:: Giovanni Colapinto &lt;giovanni.colapinto@gmail.com&gt;</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">pymongo</span>
+<span class="kn">import</span> <span class="nn">urllib.parse</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">SysException</span>
+<span class="kn">from</span> <span class="nn">pymongo.errors</span> <span class="kn">import</span> <span class="n">CollectionInvalid</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="c1"># logger = logging.getLogger(__name__)</span>
+
+
+<div class="viewcode-block" id="MyMongoDB"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB">[docs]</a><span class="k">class</span> <span class="nc">MyMongoDB</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Helper class to interact with mongodb</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        conf (dict): dictionary with the connection parameters to mongodb</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        mdb (object): pymongo client instance</span>
+<span class="sd">        utildb (str): utility database used for synchro</span>
+<span class="sd">        checked_colls (list): collections already created</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        :class:`.SysException`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mdb</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">utildb</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">checked_colls</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conf</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">password</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">quote</span><span class="p">(</span><span class="n">conf</span><span class="p">[</span><span class="s1">&#39;password&#39;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">conn_string</span> <span class="o">=</span> <span class="s1">&#39;mongodb://&#39;</span> <span class="o">+</span> \
+                            <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> \
+                            <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">conn_string</span> <span class="o">=</span> <span class="s1">&#39;mongodb://&#39;</span> <span class="o">+</span> \
+                            <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> \
+                            <span class="n">password</span> <span class="o">+</span> <span class="s1">&#39;@&#39;</span> <span class="o">+</span> \
+                            <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;host&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> \
+                            <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;port&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mdb</span> <span class="o">=</span> <span class="n">pymongo</span><span class="o">.</span><span class="n">MongoClient</span><span class="p">(</span><span class="n">conn_string</span><span class="p">,</span> <span class="n">connect</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">utildb</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s1">&#39;utildb&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="MyMongoDB.get_db"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.get_db">[docs]</a>    <span class="k">def</span> <span class="nf">get_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if database exists, otherwise creates it</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            db_name (str): mongo database name</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            database: pymongo database</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mdb</span><span class="p">[</span><span class="n">db_name</span><span class="p">]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mdb</span><span class="o">.</span><span class="n">get_database</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">db</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.get_coll"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.get_coll">[docs]</a>    <span class="k">def</span> <span class="nf">get_coll</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coll_name</span><span class="p">,</span> <span class="n">db_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if collection exists, otherwise creates it</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            coll_name (str): mongo collection name</span>
+<span class="sd">            db_name (str): mongo database name</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            collection: pymongo collection</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_db</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">coll_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">checked_colls</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">db</span><span class="o">.</span><span class="n">create_collection</span><span class="p">(</span><span class="n">coll_name</span><span class="p">)</span>
+                <span class="n">new</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">except</span> <span class="n">CollectionInvalid</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">checked_colls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coll_name</span><span class="p">)</span>
+
+        <span class="n">coll</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="n">coll_name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">new</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">coll_name</span> <span class="o">==</span> <span class="s1">&#39;counters&#39;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">coll</span><span class="o">.</span><span class="n">insert_one</span><span class="p">({</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="s1">&#39;insert_seq&#39;</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+                    <span class="n">coll</span><span class="o">.</span><span class="n">insert_one</span><span class="p">({</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="s1">&#39;update_seq&#39;</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+                    <span class="n">coll</span><span class="o">.</span><span class="n">insert_one</span><span class="p">({</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="s1">&#39;delete_seq&#39;</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">coll_name</span> <span class="o">==</span> <span class="s1">&#39;mysqllog&#39;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">coll</span><span class="o">.</span><span class="n">insert_one</span><span class="p">({</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="s1">&#39;last_log_pos&#39;</span><span class="p">,</span> <span class="s1">&#39;log_file&#39;</span><span class="p">:</span> <span class="s1">&#39;NA&#39;</span><span class="p">,</span> <span class="s1">&#39;log_pos&#39;</span><span class="p">:</span> <span class="s1">&#39;NA&#39;</span><span class="p">})</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">coll</span></div>
+
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    def get_next_seqnum(self, seq_name):</span>
+<span class="sd">        coll = self.get_coll(&#39;counters&#39;, self.utildb)</span>
+<span class="sd">        try:</span>
+<span class="sd">            seq = coll.find_one({&#39;_id&#39;: seq_name})</span>
+<span class="sd">        except Exception as e:</span>
+<span class="sd">            raise SysException(e)</span>
+<span class="sd">        try:</span>
+<span class="sd">            coll.replace_one({&#39;_id&#39;: seq_name}, {&#39;num&#39;: seq[&#39;num&#39;] + 1})</span>
+<span class="sd">        except Exception as e:</span>
+<span class="sd">            raise SysException(e)</span>
+
+<span class="sd">        return seq[&#39;num&#39;]</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="MyMongoDB.write_log_pos"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.write_log_pos">[docs]</a>    <span class="k">def</span> <span class="nf">write_log_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_file</span><span class="p">,</span> <span class="n">log_pos</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Write mysql replication log position to trace it</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            log_file (str): mysql binlog file name</span>
+<span class="sd">            log_pos (int): position in the log file</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="s1">&#39;mysqllog&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">utildb</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">coll</span><span class="o">.</span><span class="n">replace_one</span><span class="p">({</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="s1">&#39;last_log_pos&#39;</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;log_file&#39;</span><span class="p">:</span> <span class="n">log_file</span><span class="p">,</span> <span class="s1">&#39;log_pos&#39;</span><span class="p">:</span> <span class="n">log_pos</span><span class="p">})</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.get_log_pos"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.get_log_pos">[docs]</a>    <span class="k">def</span> <span class="nf">get_log_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read the last position of mysql replication log from mongodb</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: last position scanned in the mysql replication logs</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="s1">&#39;mysqllog&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">utildb</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">last_log</span> <span class="o">=</span> <span class="n">coll</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="s1">&#39;last_log_pos&#39;</span><span class="p">})</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">last_log</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.write_to_queue"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.write_to_queue">[docs]</a>    <span class="k">def</span> <span class="nf">write_to_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Write the new mysql record to a mongo queue</span>
+
+<span class="sd">        This function write the mysql records in mysql replication logs to a queue in mongo to be processed later</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            event_type (str): type of sql statement (insert, update, delete)</span>
+<span class="sd">            values: values to be handled</span>
+<span class="sd">            schema (str): mongo database name</span>
+<span class="sd">            table (str): mongo collection name</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            datetime: mongo sequence number (id)</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">seqnum</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">event_type</span> <span class="o">==</span> <span class="s1">&#39;insert&#39;</span><span class="p">:</span>
+            <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="s1">&#39;replicator_queue&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">utildb</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">event_type</span> <span class="o">==</span> <span class="s1">&#39;update&#39;</span><span class="p">:</span>
+            <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="s1">&#39;replicator_queue&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">utildb</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">event_type</span> <span class="o">==</span> <span class="s1">&#39;delete&#39;</span><span class="p">:</span>
+            <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="s1">&#39;replicator_queue&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">utildb</span><span class="p">)</span>
+
+        <span class="n">doc</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;schema&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span>
+        <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;table&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span>
+        <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;event_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">event_type</span>
+        <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;seqnum&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">seqnum</span>
+        <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;values&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">coll</span><span class="o">.</span><span class="n">insert_one</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">seqnum</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.insert"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.insert">[docs]</a>    <span class="k">def</span> <span class="nf">insert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">collection</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Insert a document in mongo</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            doc (dict): the document to be inserted</span>
+<span class="sd">            schema (str): mongo database name</span>
+<span class="sd">            collection (str): mongo collection name</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">schema</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">coll</span><span class="o">.</span><span class="n">insert_one</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.update"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">primary_key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update a document in mongo</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            doc (dict): updated document</span>
+<span class="sd">            schema (str): mongo database name</span>
+<span class="sd">            collection (str): mongo collection name</span>
+<span class="sd">            primary_key (str): id of the document to be updated</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">schema</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">coll</span><span class="o">.</span><span class="n">replace_one</span><span class="p">(</span><span class="n">primary_key</span><span class="p">,</span> <span class="n">doc</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.delete"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.delete">[docs]</a>    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">collection</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Delete a document from a database</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            schema (str): mongo database name</span>
+<span class="sd">            collection (str): mongo collection name</span>
+<span class="sd">            doc (dict): document to be deleted</span>
+<span class="sd">            primary_key: id of the document</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="n">collection</span><span class="p">,</span> <span class="n">schema</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">primary_key</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">coll</span><span class="o">.</span><span class="n">delete_one</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;try to delete doc with key: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">primary_key</span><span class="p">))</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">coll</span><span class="o">.</span><span class="n">delete_one</span><span class="p">(</span><span class="n">primary_key</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;delete result: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">deleted_count</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.delete_from_queue"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.delete_from_queue">[docs]</a>    <span class="k">def</span> <span class="nf">delete_from_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Delete mysql record from mongo queue</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            queue_id (datetime): id of record in queue</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        See Also:</span>
+<span class="sd">            :meth:`.write_to_queue`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="s1">&#39;replicator_queue&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">utildb</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">coll</span><span class="o">.</span><span class="n">delete_one</span><span class="p">(</span><span class="n">queue_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.drop_db"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.drop_db">[docs]</a>    <span class="k">def</span> <span class="nf">drop_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Drop mongo database</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            db_name (str): mongo database name</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">db_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mdb</span><span class="o">.</span><span class="n">database_names</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mdb</span><span class="o">.</span><span class="n">drop_database</span><span class="p">(</span><span class="n">db_name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.get_from_queue"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.get_from_queue">[docs]</a>    <span class="k">def</span> <span class="nf">get_from_queue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Gets a batch size number or records from mongo queue</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch_size (int): number of recordds to retrieve from queue</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            cursor: pymongo cursor with search results</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        See Also:</span>
+<span class="sd">            :meth:`.write_to_queue`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="s1">&#39;replicator_queue&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">utildb</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">queue</span> <span class="o">=</span> <span class="n">coll</span><span class="o">.</span><span class="n">find</span><span class="p">()</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="s1">&#39;seqnum&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="n">batch_size</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">queue</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.insert_primary_key"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.insert_primary_key">[docs]</a>    <span class="k">def</span> <span class="nf">insert_primary_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Insert the primary keys found during the import of a mysql dump</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            doc (dict): document qith the primary key to insert</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="s1">&#39;primary_keys&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">utildb</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">coll</span><span class="o">.</span><span class="n">replace_one</span><span class="p">({</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;_id&#39;</span><span class="p">]},</span> <span class="n">doc</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.get_primary_key"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.get_primary_key">[docs]</a>    <span class="k">def</span> <span class="nf">get_primary_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">db</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read mysql database primary keys</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            table (str): name of the table for which the primary key is searched</span>
+<span class="sd">            db (str): name of the database for which the primary key is searched</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: document found</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        See Also:</span>
+<span class="sd">            :meth:`.insert_primary_key`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="s1">&#39;primary_keys&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">utildb</span><span class="p">)</span>
+        <span class="n">primary</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Try to retrieve primary key: &#39;</span> <span class="o">+</span> <span class="n">db</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">table</span><span class="p">)</span>
+            <span class="n">primary</span> <span class="o">=</span> <span class="n">coll</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="n">db</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">table</span><span class="p">})</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">primary</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.make_db_as_parsed"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.make_db_as_parsed">[docs]</a>    <span class="k">def</span> <span class="nf">make_db_as_parsed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">parse_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Write to utildb if the db has been parsed and which part of it (schema, data, both)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            db (str): parsed database name</span>
+<span class="sd">            parse_type (str): which part of the database has been parsed (schema, data)</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="s1">&#39;parsed_db&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">utildb</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="n">coll</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="n">db</span><span class="p">})</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">doc</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span>
+            <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;db&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">db</span>
+            <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;schema&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ko&#39;</span>
+            <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ko&#39;</span>
+
+        <span class="k">if</span> <span class="n">parse_type</span> <span class="o">==</span> <span class="s1">&#39;schema&#39;</span><span class="p">:</span>
+            <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;schema&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ok&#39;</span>
+        <span class="k">elif</span> <span class="n">parse_type</span> <span class="o">==</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
+            <span class="n">doc</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ok&#39;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">coll</span><span class="o">.</span><span class="n">replace_one</span><span class="p">({</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="n">db</span><span class="p">},</span> <span class="n">doc</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MyMongoDB.get_db_as_parsed"><a class="viewcode-back" href="../../mymongolib.html#mymongolib.mongodb.MyMongoDB.get_db_as_parsed">[docs]</a>    <span class="k">def</span> <span class="nf">get_db_as_parsed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find if a database has been parsed</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            db (str): searched database name</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: document found</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            :class:`.SysException`</span>
+
+<span class="sd">        See Also:</span>
+<span class="sd">            :meth:`.make_db_as_parsed`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">coll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_coll</span><span class="p">(</span><span class="s1">&#39;parsed_db&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">utildb</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="n">coll</span><span class="o">.</span><span class="n">find_one</span><span class="p">({</span><span class="s1">&#39;_id&#39;</span><span class="p">:</span> <span class="n">db</span><span class="p">})</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SysException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">doc</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Giovanni Colapinto.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

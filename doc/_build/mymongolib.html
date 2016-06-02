@@ -1,0 +1,737 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mymongolib package &mdash; MyMongo 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="MyMongo 1.0 documentation" href="index.html" />
+    <link rel="up" title="mymongo" href="modules.html" />
+    <link rel="next" title="mymongomodules package" href="mymongomodules.html" />
+    <link rel="prev" title="mymongo" href="modules.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-mymongolib">
+<span id="mymongolib-package"></span><h1>mymongolib package<a class="headerlink" href="#module-mymongolib" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-mymongolib.daemon">
+<span id="mymongolib-daemon-module"></span><h2>mymongolib.daemon module<a class="headerlink" href="#module-mymongolib.daemon" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mymongolib.daemon.Daemon">
+<em class="property">class </em><code class="descclassname">mymongolib.daemon.</code><code class="descname">Daemon</code><span class="sig-paren">(</span><em>pidfile</em>, <em>stdin='/dev/null'</em>, <em>stdout='/dev/null'</em>, <em>stderr='/dev/null'</em>, <em>log_err=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/daemon.html#Daemon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.daemon.Daemon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Subclass Daemon class and override the run() method.</p>
+<dl class="method">
+<dt id="mymongolib.daemon.Daemon.daemonize">
+<code class="descname">daemonize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/daemon.html#Daemon.daemonize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.daemon.Daemon.daemonize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deamonize, do double-fork magic.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.daemon.Daemon.delpid">
+<code class="descname">delpid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/daemon.html#Daemon.delpid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.daemon.Daemon.delpid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.daemon.Daemon.restart">
+<code class="descname">restart</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/daemon.html#Daemon.restart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.daemon.Daemon.restart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restart daemon.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.daemon.Daemon.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/daemon.html#Daemon.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.daemon.Daemon.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>You should override this method when you subclass Daemon.
+It will be called after the process has been daemonized by start() or restart().</p>
+<p>Example:</p>
+<dl class="docutils">
+<dt>class MyDaemon(Daemon):</dt>
+<dd><dl class="first last docutils">
+<dt>def run(self):</dt>
+<dd><dl class="first last docutils">
+<dt>while True:</dt>
+<dd>time.sleep(1)</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.daemon.Daemon.start">
+<code class="descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/daemon.html#Daemon.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.daemon.Daemon.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start daemon.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.daemon.Daemon.status">
+<code class="descname">status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/daemon.html#Daemon.status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.daemon.Daemon.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get status of daemon.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.daemon.Daemon.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/daemon.html#Daemon.stop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.daemon.Daemon.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop the daemon.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-mymongolib.datamunging">
+<span id="mymongolib-datamunging-module"></span><h2>mymongolib.datamunging module<a class="headerlink" href="#module-mymongolib.datamunging" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mymongolib.datamunging.DataMunging">
+<em class="property">class </em><code class="descclassname">mymongolib.datamunging.</code><code class="descname">DataMunging</code><span class="sig-paren">(</span><em>mongo</em>, <em>replicator_queue</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/datamunging.html#DataMunging"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.datamunging.DataMunging" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="mymongolib.datamunging.DataMunging.check_queue">
+<code class="descname">check_queue</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/datamunging.html#DataMunging.check_queue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.datamunging.DataMunging.check_queue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.datamunging.DataMunging.manage_replicator_msg">
+<code class="descname">manage_replicator_msg</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/datamunging.html#DataMunging.manage_replicator_msg"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.datamunging.DataMunging.manage_replicator_msg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="mymongolib.datamunging.DataMunging.mongo">
+<code class="descname">mongo</code><em class="property"> = None</em><a class="headerlink" href="#mymongolib.datamunging.DataMunging.mongo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.datamunging.DataMunging.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>module_instance=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/datamunging.html#DataMunging.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.datamunging.DataMunging.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-mymongolib.exceptions">
+<span id="mymongolib-exceptions-module"></span><h2>mymongolib.exceptions module<a class="headerlink" href="#module-mymongolib.exceptions" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="mymongolib.exceptions.SysException">
+<em class="property">exception </em><code class="descclassname">mymongolib.exceptions.</code><code class="descname">SysException</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/exceptions.html#SysException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.exceptions.SysException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<p>Custom exception class</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>*args</strong> &#8211; the same as exception class</li>
+<li><strong>**kwargs</strong> &#8211; the same as exception class</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-mymongolib.mongodb">
+<span id="mymongolib-mongodb-module"></span><h2>mymongolib.mongodb module<a class="headerlink" href="#module-mymongolib.mongodb" title="Permalink to this headline">¶</a></h2>
+<p>Module to interact with mongodb</p>
+<span class="target" id="module-mymongolib"></span><dl class="class">
+<dt id="mymongolib.mongodb.MyMongoDB">
+<em class="property">class </em><code class="descclassname">mymongolib.mongodb.</code><code class="descname">MyMongoDB</code><span class="sig-paren">(</span><em>conf</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Helper class to interact with mongodb</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conf</strong> (<em>dict</em>) &#8211; dictionary with the connection parameters to mongodb</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="mymongolib.MyMongoDB.mdb">
+<code class="descname">mdb</code><a class="headerlink" href="#mymongolib.MyMongoDB.mdb" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>object</em> &#8211; pymongo client instance</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mymongolib.MyMongoDB.utildb">
+<code class="descname">utildb</code><a class="headerlink" href="#mymongolib.MyMongoDB.utildb" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; utility database used for synchro</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mymongolib.MyMongoDB.checked_colls">
+<code class="descname">checked_colls</code><a class="headerlink" href="#mymongolib.MyMongoDB.checked_colls" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list</em> &#8211; collections already created</p>
+</dd></dl>
+
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="mymongolib.mongodb.MyMongoDB.checked_colls">
+<code class="descname">checked_colls</code><em class="property"> = []</em><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.checked_colls" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.delete">
+<code class="descname">delete</code><span class="sig-paren">(</span><em>schema</em>, <em>collection</em>, <em>doc=None</em>, <em>primary_key=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete a document from a database</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>schema</strong> (<em>str</em>) &#8211; mongo database name</li>
+<li><strong>collection</strong> (<em>str</em>) &#8211; mongo collection name</li>
+<li><strong>doc</strong> (<em>dict</em>) &#8211; document to be deleted</li>
+<li><strong>primary_key</strong> &#8211; id of the document</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.delete_from_queue">
+<code class="descname">delete_from_queue</code><span class="sig-paren">(</span><em>queue_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.delete_from_queue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.delete_from_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete mysql record from mongo queue</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>queue_id</strong> (<em>datetime</em>) &#8211; id of record in queue</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#mymongolib.mongodb.MyMongoDB.write_to_queue" title="mymongolib.mongodb.MyMongoDB.write_to_queue"><code class="xref py py-meth docutils literal"><span class="pre">write_to_queue()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.drop_db">
+<code class="descname">drop_db</code><span class="sig-paren">(</span><em>db_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.drop_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.drop_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop mongo database</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>db_name</strong> (<em>str</em>) &#8211; mongo database name</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.get_coll">
+<code class="descname">get_coll</code><span class="sig-paren">(</span><em>coll_name</em>, <em>db_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.get_coll"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.get_coll" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if collection exists, otherwise creates it</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>coll_name</strong> (<em>str</em>) &#8211; mongo collection name</li>
+<li><strong>db_name</strong> (<em>str</em>) &#8211; mongo database name</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">pymongo collection</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">collection</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.get_db">
+<code class="descname">get_db</code><span class="sig-paren">(</span><em>db_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.get_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.get_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if database exists, otherwise creates it</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>db_name</strong> (<em>str</em>) &#8211; mongo database name</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">pymongo database</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">database</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.get_db_as_parsed">
+<code class="descname">get_db_as_parsed</code><span class="sig-paren">(</span><em>db</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.get_db_as_parsed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.get_db_as_parsed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find if a database has been parsed</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>db</strong> (<em>str</em>) &#8211; searched database name</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">document found</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#mymongolib.mongodb.MyMongoDB.make_db_as_parsed" title="mymongolib.mongodb.MyMongoDB.make_db_as_parsed"><code class="xref py py-meth docutils literal"><span class="pre">make_db_as_parsed()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.get_from_queue">
+<code class="descname">get_from_queue</code><span class="sig-paren">(</span><em>batch_size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.get_from_queue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.get_from_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a batch size number or records from mongo queue</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>batch_size</strong> (<em>int</em>) &#8211; number of recordds to retrieve from queue</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">pymongo cursor with search results</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">cursor</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#mymongolib.mongodb.MyMongoDB.write_to_queue" title="mymongolib.mongodb.MyMongoDB.write_to_queue"><code class="xref py py-meth docutils literal"><span class="pre">write_to_queue()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.get_log_pos">
+<code class="descname">get_log_pos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.get_log_pos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.get_log_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the last position of mysql replication log from mongodb</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">last position scanned in the mysql replication logs</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.get_primary_key">
+<code class="descname">get_primary_key</code><span class="sig-paren">(</span><em>table</em>, <em>db</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.get_primary_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.get_primary_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read mysql database primary keys</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>table</strong> (<em>str</em>) &#8211; name of the table for which the primary key is searched</li>
+<li><strong>db</strong> (<em>str</em>) &#8211; name of the database for which the primary key is searched</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">document found</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">dict</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#mymongolib.mongodb.MyMongoDB.insert_primary_key" title="mymongolib.mongodb.MyMongoDB.insert_primary_key"><code class="xref py py-meth docutils literal"><span class="pre">insert_primary_key()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.insert">
+<code class="descname">insert</code><span class="sig-paren">(</span><em>doc</em>, <em>schema</em>, <em>collection</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.insert"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.insert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert a document in mongo</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>doc</strong> (<em>dict</em>) &#8211; the document to be inserted</li>
+<li><strong>schema</strong> (<em>str</em>) &#8211; mongo database name</li>
+<li><strong>collection</strong> (<em>str</em>) &#8211; mongo collection name</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.insert_primary_key">
+<code class="descname">insert_primary_key</code><span class="sig-paren">(</span><em>doc</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.insert_primary_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.insert_primary_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert the primary keys found during the import of a mysql dump</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>doc</strong> (<em>dict</em>) &#8211; document qith the primary key to insert</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.make_db_as_parsed">
+<code class="descname">make_db_as_parsed</code><span class="sig-paren">(</span><em>db</em>, <em>parse_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.make_db_as_parsed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.make_db_as_parsed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write to utildb if the db has been parsed and which part of it (schema, data, both)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>db</strong> (<em>str</em>) &#8211; parsed database name</li>
+<li><strong>parse_type</strong> (<em>str</em>) &#8211; which part of the database has been parsed (schema, data)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mymongolib.mongodb.MyMongoDB.mdb">
+<code class="descname">mdb</code><em class="property"> = None</em><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.mdb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.update">
+<code class="descname">update</code><span class="sig-paren">(</span><em>doc</em>, <em>schema</em>, <em>collection</em>, <em>primary_key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update a document in mongo</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>doc</strong> (<em>dict</em>) &#8211; updated document</li>
+<li><strong>schema</strong> (<em>str</em>) &#8211; mongo database name</li>
+<li><strong>collection</strong> (<em>str</em>) &#8211; mongo collection name</li>
+<li><strong>primary_key</strong> (<em>str</em>) &#8211; id of the document to be updated</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="mymongolib.mongodb.MyMongoDB.utildb">
+<code class="descname">utildb</code><em class="property"> = ''</em><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.utildb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.write_log_pos">
+<code class="descname">write_log_pos</code><span class="sig-paren">(</span><em>log_file</em>, <em>log_pos</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.write_log_pos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.write_log_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write mysql replication log position to trace it</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>log_file</strong> (<em>str</em>) &#8211; mysql binlog file name</li>
+<li><strong>log_pos</strong> (<em>int</em>) &#8211; position in the log file</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mongodb.MyMongoDB.write_to_queue">
+<code class="descname">write_to_queue</code><span class="sig-paren">(</span><em>event_type</em>, <em>values</em>, <em>schema</em>, <em>table</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mongodb.html#MyMongoDB.write_to_queue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mongodb.MyMongoDB.write_to_queue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the new mysql record to a mongo queue</p>
+<p>This function write the mysql records in mysql replication logs to a queue in mongo to be processed later</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>event_type</strong> (<em>str</em>) &#8211; type of sql statement (insert, update, delete)</li>
+<li><strong>values</strong> &#8211; values to be handled</li>
+<li><strong>schema</strong> (<em>str</em>) &#8211; mongo database name</li>
+<li><strong>table</strong> (<em>str</em>) &#8211; mongo collection name</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">mongo sequence number (id)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">datetime</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#mymongolib.exceptions.SysException" title="mymongolib.exceptions.SysException"><code class="xref py py-class docutils literal"><span class="pre">SysException</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-mymongolib.mymongodaemon">
+<span id="mymongolib-mymongodaemon-module"></span><h2>mymongolib.mymongodaemon module<a class="headerlink" href="#module-mymongolib.mymongodaemon" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mymongolib.mymongodaemon.MyMongoDaemon">
+<em class="property">class </em><code class="descclassname">mymongolib.mymongodaemon.</code><code class="descname">MyMongoDaemon</code><span class="sig-paren">(</span><em>pidfile</em>, <em>stdin='/dev/null'</em>, <em>stdout='/dev/null'</em>, <em>stderr='/dev/null'</em>, <em>log_err=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mymongodaemon.html#MyMongoDaemon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mymongodaemon.MyMongoDaemon" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#mymongolib.daemon.Daemon" title="mymongolib.daemon.Daemon"><code class="xref py py-class docutils literal"><span class="pre">mymongolib.daemon.Daemon</span></code></a></p>
+<dl class="method">
+<dt id="mymongolib.mymongodaemon.MyMongoDaemon.data_munging">
+<code class="descname">data_munging</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mymongodaemon.html#MyMongoDaemon.data_munging"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mymongodaemon.MyMongoDaemon.data_munging" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mymongodaemon.MyMongoDaemon.data_process">
+<code class="descname">data_process</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mymongodaemon.html#MyMongoDaemon.data_process"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mymongodaemon.MyMongoDaemon.data_process" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mymongodaemon.MyMongoDaemon.dummy_sched">
+<code class="descname">dummy_sched</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mymongodaemon.html#MyMongoDaemon.dummy_sched"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mymongodaemon.MyMongoDaemon.dummy_sched" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mymongodaemon.MyMongoDaemon.replicator">
+<code class="descname">replicator</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mymongodaemon.html#MyMongoDaemon.replicator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mymongodaemon.MyMongoDaemon.replicator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mymongodaemon.MyMongoDaemon.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mymongodaemon.html#MyMongoDaemon.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mymongodaemon.MyMongoDaemon.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mymongodaemon.MyMongoDaemon.scheduler">
+<code class="descname">scheduler</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mymongodaemon.html#MyMongoDaemon.scheduler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mymongodaemon.MyMongoDaemon.scheduler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.mymongodaemon.MyMongoDaemon.write_pid">
+<code class="descname">write_pid</code><span class="sig-paren">(</span><em>pid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mymongodaemon.html#MyMongoDaemon.write_pid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mymongodaemon.MyMongoDaemon.write_pid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-mymongolib.mysql">
+<span id="mymongolib-mysql-module"></span><h2>mymongolib.mysql module<a class="headerlink" href="#module-mymongolib.mysql" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="mymongolib.mysql.mysql_stream">
+<code class="descclassname">mymongolib.mysql.</code><code class="descname">mysql_stream</code><span class="sig-paren">(</span><em>conf</em>, <em>mongo</em>, <em>queue_out</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/mysql.html#mysql_stream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.mysql.mysql_stream" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-mymongolib.utils">
+<span id="mymongolib-utils-module"></span><h2>mymongolib.utils module<a class="headerlink" href="#module-mymongolib.utils" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mymongolib.utils.LoggerWriter">
+<em class="property">class </em><code class="descclassname">mymongolib.utils.</code><code class="descname">LoggerWriter</code><span class="sig-paren">(</span><em>logger</em>, <em>level</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/utils.html#LoggerWriter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.utils.LoggerWriter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="mymongolib.utils.LoggerWriter.flush">
+<code class="descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/utils.html#LoggerWriter.flush"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.utils.LoggerWriter.flush" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="mymongolib.utils.LoggerWriter.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/utils.html#LoggerWriter.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.utils.LoggerWriter.write" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="mymongolib.utils.cmd_parser">
+<code class="descclassname">mymongolib.utils.</code><code class="descname">cmd_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/utils.html#cmd_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.utils.cmd_parser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="mymongolib.utils.mysqldump_cmd">
+<code class="descclassname">mymongolib.utils.</code><code class="descname">mysqldump_cmd</code><span class="sig-paren">(</span><em>conf</em>, <em>db</em>, <em>dump_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/utils.html#mysqldump_cmd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.utils.mysqldump_cmd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="mymongolib.utils.mysqldump_parser_data">
+<code class="descclassname">mymongolib.utils.</code><code class="descname">mysqldump_parser_data</code><span class="sig-paren">(</span><em>dump_file</em>, <em>mongodb</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/utils.html#mysqldump_parser_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.utils.mysqldump_parser_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="mymongolib.utils.mysqldump_parser_schema">
+<code class="descclassname">mymongolib.utils.</code><code class="descname">mysqldump_parser_schema</code><span class="sig-paren">(</span><em>dump_file</em>, <em>mongodb</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/utils.html#mysqldump_parser_schema"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.utils.mysqldump_parser_schema" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="mymongolib.utils.process_data_buffer">
+<code class="descclassname">mymongolib.utils.</code><code class="descname">process_data_buffer</code><span class="sig-paren">(</span><em>buf</em>, <em>table</em>, <em>db</em>, <em>mongodb</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/utils.html#process_data_buffer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.utils.process_data_buffer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="mymongolib.utils.process_schema_buffer">
+<code class="descclassname">mymongolib.utils.</code><code class="descname">process_schema_buffer</code><span class="sig-paren">(</span><em>buf</em>, <em>table</em>, <em>db</em>, <em>mongodb</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/utils.html#process_schema_buffer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.utils.process_schema_buffer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="mymongolib.utils.run_mysqldump">
+<code class="descclassname">mymongolib.utils.</code><code class="descname">run_mysqldump</code><span class="sig-paren">(</span><em>dump_type</em>, <em>conf</em>, <em>mongodb</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/utils.html#run_mysqldump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.utils.run_mysqldump" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">mymongolib package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-mymongolib.daemon">mymongolib.daemon module</a></li>
+<li><a class="reference internal" href="#module-mymongolib.datamunging">mymongolib.datamunging module</a></li>
+<li><a class="reference internal" href="#module-mymongolib.exceptions">mymongolib.exceptions module</a></li>
+<li><a class="reference internal" href="#module-mymongolib.mongodb">mymongolib.mongodb module</a></li>
+<li><a class="reference internal" href="#module-mymongolib.mymongodaemon">mymongolib.mymongodaemon module</a></li>
+<li><a class="reference internal" href="#module-mymongolib.mysql">mymongolib.mysql module</a></li>
+<li><a class="reference internal" href="#module-mymongolib.utils">mymongolib.utils module</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">mymongo</a><ul>
+      <li>Previous: <a href="modules.html" title="previous chapter">mymongo</a></li>
+      <li>Next: <a href="mymongomodules.html" title="next chapter">mymongomodules package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/mymongolib.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Giovanni Colapinto.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="_sources/mymongolib.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
