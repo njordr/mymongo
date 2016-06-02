@@ -1,3 +1,11 @@
+"""
+.. module:: mymongolib
+   :platform: Unix
+   :synopsis: Usefull classes for mymongo.
+
+.. moduleauthor:: Giovanni Colapinto <giovanni.colapinto@gmail.com>
+
+"""
 import pymongo
 import urllib.parse
 import logging
@@ -100,6 +108,15 @@ class MyMongoDB:
         return seq['num']
 
     def write_log_pos(self, log_file, log_pos):
+        """
+        Write mysql log position for trace it
+
+        :param log_file: mysql binlog file name
+        :type log_file: str
+        :param log_pos: position in the log file
+        :type log_pos: int
+        :raises: SysException
+        """
         coll = self.get_coll('mysqllog', self.utildb)
         try:
             coll.replace_one({'_id': 'last_log_pos'}, {'log_file': log_file, 'log_pos': log_pos})
@@ -107,6 +124,10 @@ class MyMongoDB:
             raise SysException(e)
 
     def get_log_pos(self):
+        """
+        Read the last position in the mysql replication log
+        :return:
+        """
         coll = self.get_coll('mysqllog', self.utildb)
         try:
             last_log = coll.find_one({'_id': 'last_log_pos'})

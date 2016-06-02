@@ -17,19 +17,6 @@ from mymongolib.utils import LoggerWriter
 config = configparser.ConfigParser()
 config.read('conf/config.ini')
 
-'''
-logger = logging.getLogger('mymongo')
-logger.setLevel(logging.getLevelName(config['log']['console_level']))
-logformatter = logging.Formatter('%(asctime)s;%(levelname)s;%(message)s')
-fh = logging.handlers.TimedRotatingFileHandler('logs/mymongo.log', 'midnight', 1, backupCount=10)
-fh.setLevel(logging.getLevelName(config['log']['file_level']))
-fh.setFormatter(logformatter)
-ch = logging.StreamHandler()
-ch.setLevel(logging.getLevelName(config['log']['console_level']))
-ch.setFormatter(logformatter)
-logger.addHandler(fh)
-logger.addHandler(ch)
-'''
 logging.config.fileConfig('conf/logging.conf')
 logger = logging.getLogger('root')
 
