@@ -1,4 +1,5 @@
-"""
+"""Module to interact with mongodb
+
 .. module:: mymongolib
    :platform: Unix
    :synopsis: Usefull classes for mymongo.
@@ -18,6 +19,20 @@ from datetime import datetime
 
 
 class MyMongoDB:
+    """Helper class to interact with mongodb
+
+    Args:
+        conf (dict): dictionary with the connection parameters to mongodb
+
+    Attributes:
+        mdb (object): pymongo client instance
+        utildb (str): utility database used for synchro
+        checked_colls (list): collections already created
+
+    Raises:
+        :class:`.SysException`
+
+    """
     mdb = None
     utildb = ''
     checked_colls = []
@@ -46,6 +61,18 @@ class MyMongoDB:
         self.utildb = conf['utildb']
 
     def get_db(self, db_name):
+        """Check if database exists, otherwise creates it
+
+        Args:
+            db_name (str): mongo database name
+
+        Returns:
+            database: pymongo database
+
+        Raises:
+            :class:`.SysException`
+
+        """
         try:
             db = self.mdb[db_name]
         except:
@@ -57,6 +84,19 @@ class MyMongoDB:
         return db
 
     def get_coll(self, coll_name, db_name):
+        """Check if collection exists, otherwise creates it
+
+        Args:
+            coll_name (str): mongo collection name
+            db_name (str): mongo database name
+
+        Returns:
+            collection: pymongo collection
+
+        Raises:
+            :class:`.SysException`
+
+        """
         new = False
         db = None
 
@@ -94,6 +134,7 @@ class MyMongoDB:
 
         return coll
 
+    '''
     def get_next_seqnum(self, seq_name):
         coll = self.get_coll('counters', self.utildb)
         try:
@@ -106,16 +147,18 @@ class MyMongoDB:
             raise SysException(e)
 
         return seq['num']
+    '''
 
     def write_log_pos(self, log_file, log_pos):
-        """
-        Write mysql log position for trace it
+        """Write mysql replication log position to trace it
 
-        :param log_file: mysql binlog file name
-        :type log_file: str
-        :param log_pos: position in the log file
-        :type log_pos: int
-        :raises: SysException
+        Args:
+            log_file (str): mysql binlog file name
+            log_pos (int): position in the log file
+
+        Raises:
+            :class:`.SysException`
+
         """
         coll = self.get_coll('mysqllog', self.utildb)
         try:
@@ -124,9 +167,14 @@ class MyMongoDB:
             raise SysException(e)
 
     def get_log_pos(self):
-        """
-        Read the last position in the mysql replication log
-        :return:
+        """Read the last position of mysql replication log from mongodb
+
+        Returns:
+            int: last position scanned in the mysql replication logs
+
+        Raises:
+            :class:`.SysException`
+
         """
         coll = self.get_coll('mysqllog', self.utildb)
         try:
@@ -137,15 +185,29 @@ class MyMongoDB:
         return last_log
 
     def write_to_queue(self, event_type, values, schema, table):
+        """Write the new mysql record to a mongo queue
+
+        This function write the mysql records in mysql replication logs to a queue in mongo to be processed later
+
+        Args:
+            event_type (str): type of sql statement (insert, update, delete)
+            values: values to be handled
+            schema (str): mongo database name
+            table (str): mongo collection name
+
+        Returns:
+            datetime: mongo sequence number (id)
+
+        Raises:
+            :class:`.SysException`
+
+        """
         seqnum = datetime.now().timestamp()
         if event_type == 'insert':
-            # coll = self.get_coll('insert_queue', self.utildb)
             coll = self.get_coll('replicator_queue', self.utildb)
         elif event_type == 'update':
-            # coll = self.get_coll('update_queue', self.utildb)
             coll = self.get_coll('replicator_queue', self.utildb)
         elif event_type == 'delete':
-            # coll = self.get_coll('delete_queue', self.utildb)
             coll = self.get_coll('replicator_queue', self.utildb)
 
         doc = dict()
@@ -163,6 +225,17 @@ class MyMongoDB:
         return seqnum
 
     def insert(self, doc, schema, collection):
+        """Insert a document in mongo
+
+        Args:
+            doc (dict): the document to be inserted
+            schema (str): mongo database name
+            collection (str): mongo collection name
+
+        Raises:
+            :class:`.SysException`
+
+        """
         coll = self.get_coll(collection, schema)
 
         try:
@@ -171,6 +244,18 @@ class MyMongoDB:
             raise SysException(e)
 
     def update(self, doc, schema, collection, primary_key):
+        """Update a document in mongo
+
+        Args:
+            doc (dict): updated document
+            schema (str): mongo database name
+            collection (str): mongo collection name
+            primary_key (str): id of the document to be updated
+
+        Raises:
+            :class:`.SysException`
+
+        """
         coll = self.get_coll(collection, schema)
 
         try:
@@ -179,6 +264,18 @@ class MyMongoDB:
             raise SysException(e)
 
     def delete(self, schema, collection, doc=None, primary_key=None):
+        """Delete a document from a database
+
+        Args:
+            schema (str): mongo database name
+            collection (str): mongo collection name
+            doc (dict): document to be deleted
+            primary_key: id of the document
+
+        Raises:
+            :class:`.SysException`
+
+        """
         coll = self.get_coll(collection, schema)
 
         if primary_key is None:
@@ -195,6 +292,18 @@ class MyMongoDB:
                 raise SysException(e)
 
     def delete_from_queue(self, queue_id):
+        """Delete mysql record from mongo queue
+
+        Args:
+            queue_id (datetime): id of record in queue
+
+        Raises:
+            :class:`.SysException`
+
+        See Also:
+            :meth:`.write_to_queue`
+
+        """
         coll = self.get_coll('replicator_queue', self.utildb)
 
         try:
@@ -203,6 +312,15 @@ class MyMongoDB:
             raise SysException(e)
 
     def drop_db(self, db_name):
+        """Drop mongo database
+
+        Args:
+            db_name (str): mongo database name
+
+        Raises:
+            :class:`.SysException`
+
+        """
         if db_name in self.mdb.database_names():
             try:
                 self.mdb.drop_database(db_name)
@@ -210,6 +328,21 @@ class MyMongoDB:
                 raise SysException(e)
 
     def get_from_queue(self, batch_size):
+        """Gets a batch size number or records from mongo queue
+
+        Args:
+            batch_size (int): number of recordds to retrieve from queue
+
+        Returns:
+            cursor: pymongo cursor with search results
+
+        Raises:
+            :class:`.SysException`
+
+        See Also:
+            :meth:`.write_to_queue`
+
+        """
         coll = self.get_coll('replicator_queue', self.utildb)
         try:
             queue = coll.find().sort('seqnum', 1)[0:batch_size]
@@ -219,6 +352,15 @@ class MyMongoDB:
         return queue
 
     def insert_primary_key(self, doc):
+        """Insert the primary keys found during the import of a mysql dump
+
+        Args:
+            doc (dict): document qith the primary key to insert
+
+        Raises:
+            :class:`.SysException`
+
+        """
         coll = self.get_coll('primary_keys', self.utildb)
         try:
             coll.replace_one({'_id': doc['_id']}, doc, True)
@@ -226,6 +368,22 @@ class MyMongoDB:
             raise SysException(e)
 
     def get_primary_key(self, table, db):
+        """Read mysql database primary keys
+
+        Args:
+            table (str): name of the table for which the primary key is searched
+            db (str): name of the database for which the primary key is searched
+
+        Returns:
+            dict: document found
+
+        Raises:
+            :class:`.SysException`
+
+        See Also:
+            :meth:`.insert_primary_key`
+
+        """
         coll = self.get_coll('primary_keys', self.utildb)
         primary = None
         try:
@@ -237,6 +395,16 @@ class MyMongoDB:
         return primary
 
     def make_db_as_parsed(self, db, parse_type):
+        """Write to utildb if the db has been parsed and which part of it (schema, data, both)
+
+        Args:
+            db (str): parsed database name
+            parse_type (str): which part of the database has been parsed (schema, data)
+
+        Raises:
+            :class:`.SysException`
+
+        """
         coll = self.get_coll('parsed_db', self.utildb)
         try:
             doc = coll.find_one({'_id': db})
@@ -261,6 +429,21 @@ class MyMongoDB:
             raise SysException(e)
 
     def get_db_as_parsed(self, db):
+        """Find if a database has been parsed
+
+        Args:
+            db (str): searched database name
+
+        Returns:
+            dict: document found
+
+        Raises:
+            :class:`.SysException`
+
+        See Also:
+            :meth:`.make_db_as_parsed`
+
+        """
         coll = self.get_coll('parsed_db', self.utildb)
 
         try:
