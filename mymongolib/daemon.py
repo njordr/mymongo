@@ -8,8 +8,15 @@ from signal import SIGTERM
 
 
 class Daemon(object):
-    """
-    Subclass Daemon class and override the run() method.
+    """Class to demonize the application
+
+    Args:
+        pidfile (str): path for the pidfile
+        stdin (Optional[str]): path to stdin. Default to /dev/null
+        stdout (Optional[str]): path to stdout. Default to /dev/null
+        stderr (Optional[str]): path to stderr. Default to /dev/null
+        log_err (Optional[object]): :class:`.LoggerWriter` object. Default to None
+
     """
     def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null', log_err=None):
         self.stdin = stdin
@@ -22,8 +29,7 @@ class Daemon(object):
         self.modules = dict()
 
     def daemonize(self):
-        """
-        Deamonize, do double-fork magic.
+        """Deamonize, do double-fork magic.
         """
         try:
             pid = os.fork()
@@ -75,11 +81,13 @@ class Daemon(object):
         atexit.register(self.delpid)
 
     def delpid(self):
+        """Delete pid file created by the daemon
+
+        """
         os.remove(self.pidfile)
 
     def start(self):
-        """
-        Start daemon.
+        """Start daemon.
         """
         pids = None
         # Check pidfile to see if the daemon already runs.
@@ -101,8 +109,7 @@ class Daemon(object):
         self.run()
 
     def status(self):
-        """
-        Get status of daemon.
+        """Get status of daemon.
         """
         try:
             with open(self.pidfile) as f:
@@ -123,8 +130,7 @@ class Daemon(object):
                 sys.stdout.write(message)
 
     def stop(self):
-        """
-        Stop the daemon.
+        """Stop the daemon.
         """
         # Get the pid from pidfile.
         try:
@@ -158,8 +164,7 @@ class Daemon(object):
             sys.exit(1)
 
     def restart(self):
-        """
-        Restart daemon.
+        """Restart daemon.
         """
         self.stop()
         time.sleep(1)

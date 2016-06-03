@@ -52,7 +52,22 @@
 <dt id="mymongolib.daemon.Daemon">
 <em class="property">class </em><code class="descclassname">mymongolib.daemon.</code><code class="descname">Daemon</code><span class="sig-paren">(</span><em>pidfile</em>, <em>stdin='/dev/null'</em>, <em>stdout='/dev/null'</em>, <em>stderr='/dev/null'</em>, <em>log_err=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/daemon.html#Daemon"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.daemon.Daemon" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>Subclass Daemon class and override the run() method.</p>
+<p>Class to demonize the application</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pidfile</strong> (<em>str</em>) &#8211; path for the pidfile</li>
+<li><strong>stdin</strong> (<em>Optional[str]</em>) &#8211; path to stdin. Default to /dev/null</li>
+<li><strong>stdout</strong> (<em>Optional[str]</em>) &#8211; path to stdout. Default to /dev/null</li>
+<li><strong>stderr</strong> (<em>Optional[str]</em>) &#8211; path to stderr. Default to /dev/null</li>
+<li><strong>log_err</strong> (<em>Optional[object]</em>) &#8211; <a class="reference internal" href="#mymongolib.utils.LoggerWriter" title="mymongolib.utils.LoggerWriter"><code class="xref py py-class docutils literal"><span class="pre">LoggerWriter</span></code></a> object. Default to None</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="mymongolib.daemon.Daemon.daemonize">
 <code class="descname">daemonize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/daemon.html#Daemon.daemonize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.daemon.Daemon.daemonize" title="Permalink to this definition">¶</a></dt>
@@ -62,7 +77,8 @@
 <dl class="method">
 <dt id="mymongolib.daemon.Daemon.delpid">
 <code class="descname">delpid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mymongolib/daemon.html#Daemon.delpid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mymongolib.daemon.Daemon.delpid" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Delete pid file created by the daemon</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="mymongolib.daemon.Daemon.restart">

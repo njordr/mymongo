@@ -21,7 +21,15 @@ config.read('conf/config.ini')
 
 
 class MyMongoDaemon(Daemon):
+    """Subclass of :class:`.Daemon`
+
+    """
     def run(self):
+        """Runs the daemon
+
+        Thims method runs the daemon and creates all the process needed. Then waits forever
+
+        """
         self.logger = logging.getLogger(__name__)
         sys.stderr = self.log_err
         try:
@@ -55,6 +63,9 @@ class MyMongoDaemon(Daemon):
             time.sleep(60)
 
     def scheduler(self):
+        """Runs the daemon scheduler
+
+        """
         self.write_pid(str(os.getpid()))
         if self.setproctitle:
             import setproctitle
@@ -67,12 +78,27 @@ class MyMongoDaemon(Daemon):
             self.logger.error('Cannot start scheduler. Error: ' + str(e))
     
     def dummy_sched(self):
+        """Dummy method to keep the schedule running
+
+        """
         self.logger.info('Scheduler works!')
 
     def write_pid(self, pid):
+        """Write pid to the pidfile
+
+        Args:
+            pid (int): number of process id
+
+        """
         open(self.pidfile, 'a+').write("{}\n".format(pid))
 
     def replicator(self):
+        """Main process for replication. It writes entry in the replication queue
+
+        See Also:
+            :meth:`.data_munging`
+
+        """
         self.write_pid(str(os.getpid()))
         if self.setproctitle:
             import setproctitle
@@ -81,37 +107,13 @@ class MyMongoDaemon(Daemon):
         mongo = MyMongoDB(config['mongodb'])
         mysql.mysql_stream(config['mysql'], mongo, self.queues['replicator_out'])
 
-    '''
-    def start_module(self):
-        self.logger.debug('Start ' + self.start_module.__name__)
-
-        mod_base = os.path.join(config['general']['base_dir'], config['general']['mod_base_dir'])
-        module_name = config['general']['parse_data_module']
-        sys.path.insert(0, mod_base)
-
-        if not os.path.isdir(mod_base):
-            self.logger.error('Module dir: ' + mod_base + ' does not exist. Skipping module ' + module_name)
-
-        mod_base_name = os.path.basename(mod_base)
-        try:
-            self.modules[module_name] = __import__('%s.%s' % (mod_base_name, module_name), fromlist=[module_name])
-        except Exception as e:
-            self.logger.error('Cannot load module named: ' + module_name + ' Error: ' + str(e))
-
-        try:
-            class_ = getattr(self.modules[module_name], module_name)
-        except Exception as e:
-            self.logger.error('Cannot load class name: ' + module_name + ' from module: ' +
-                              str(self.modules[module_name].__name__) + ' Error: ' + str(e))
-
-        try:
-            instance = class_()
-        except Exception as e:
-            self.logger.error('Cannot instantiate class: ' + module_name + ' Error: ' + str(e))
-
-        return instance
-    '''
     def data_munging(self):
+        """Reads data from replpication queue and writes to mongo
+
+        See Also:
+            :meth:`.replicator`
+
+        """
         self.write_pid(str(os.getpid()))
         if self.setproctitle:
             import setproctitle
