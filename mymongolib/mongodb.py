@@ -1,12 +1,3 @@
-"""Module to interact with mongodb
-
-.. module:: mymongolib
-   :platform: Unix
-   :synopsis: Usefull classes for mymongo.
-
-.. moduleauthor:: Giovanni Colapinto <giovanni.colapinto@gmail.com>
-
-"""
 import pymongo
 import urllib.parse
 import logging
