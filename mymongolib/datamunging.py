@@ -57,7 +57,7 @@ class DataMunging:
                 if doc['event_type'] == 'insert':
                     try:
                         self.mongo.insert(doc['values'], doc['schema'], doc['table'])
-                        to_delete.append(str(doc['_id']))
+                        to_delete.append(doc['_id'])
                         self.last_seqnum = doc['seqnum']
                     except Exception as e:
                         self.logger.error('Cannot insert document into collection ' + doc['table'] +
